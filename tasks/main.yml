@@ -1,0 +1,30 @@
+- name: install required packages for graphite debian/ubuntu
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - git
+    - nodejs
+    - devscripts
+    - debhelper
+  when: ansible_os_family == "Debian"
+
+
+
+- name: 1
+  command: mkdir /tmp/build
+
+
+- git: repo=https://github.com/etsy/statsd.git dest=/tmp/build/statsd
+
+- name: build statsd pkg
+  command: chdir=/tmp/build/statsd dpkg-buildpackage
+
+# Install a .deb package
+- apt: deb=/tmp/build/statsd_0.6.0-1_all.deb
+
+
+- name: statsd conf
+  template: src=localConfig.js.j2 dest=/etc/statsd/localConfig.js mode=0644
+
+
+- service: name=statsd state=started
+
